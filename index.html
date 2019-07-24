@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>JS Total</title>
+    <style>
+        .info {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <form action="#" name="myForm">
+        <p>
+            <input type="text" name="request">
+        </p>
+        <p>
+            <select name="command" id="command">
+                <option value="movie">Movie</option>
+                <option value="series">Series</option>
+                <option value="episode">Episode</option>
+            </select>
+        </p>
+        <p>
+            <input type="submit" value="Search" name="send">
+        </p>
+    </form>
+    <div id="container" style="display: flex;justify-content:space-around;flex-wrap: wrap;">
+        <!-- <div class="image">
+            <img src="" alt="poster">
+        </div>
+        <div class="info">
+            <p class="title"></p>
+            <p class="year"></p>
+        </div> -->
+    </div>
+    <script>
+        let i = 0;
+        document.myForm.send.addEventListener("click",()=>{
+            event.preventDefault();
+            i++;
+            let request = document.myForm.request.value;
+            console.log(request);
+            let action = document.myForm.command.value;
+            console.log(action);
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET',`http://www.omdbapi.com/?apikey=1cb8834e&type=${action}&s=${request}&page=${i}`, true);
+            xhr.send();
+            xhr.onreadystatechange = ()=>{
+                if(xhr.readyState == 4) {
+                    if (xhr.status != 200) {
+                        // обработать ошибку
+                        alert( xhr.status + ': ' + xhr.statusText ); // пример вывода: 404: Not Found
+                    } else {
+                        // вывести результат
+                        let str = '';
+                        let result = (JSON.parse(xhr.responseText))['Search'];
+                        if(result.length > 0) {
+                            let div = null;
+
+                            let parent = document.querySelector("#container");
+                            parent.innerHTML = '';
+                            for(let i = 0; i < result.length; i++) {
+                                div = document.createElement("div");
+                                div.style.display = 'flex';
+                                div.style.width = '20%';
+                                str = `<div class="image">
+                                            <img src="${result[i].Poster}" alt="No poster" style="width:150px;">
+                                        </div>
+                                            <div class="info">
+                                                <h4 class="title">${result[i].Title}</h4>
+                                                <p class="year">Released: ${result[i].Year}</p>
+                                            </div>
+                                        </div>`;
+                                div.innerHTML = str;
+                                parent.appendChild(div);
+
+                            }
+                        }
+                    }
+                };
+            };
+        });
+    </script>
+</body>
+</html>
