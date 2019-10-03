@@ -7,6 +7,14 @@
         .info {
             margin-left: 20px;
         }
+        .pagination {
+            display: flex;
+            justify-content: center;
+        }
+        button {
+            width: 50px;
+            height: 50px;
+        }
     </style>
 </head>
 <body>
@@ -40,16 +48,20 @@
         </div> -->
     </div>
     <script>
-        document.myForm.send.addEventListener("click",()=>{
+        let index = 1;
+        let shift = 0;
+        let pages = 0;
+        let msg = '';
+        document.myForm.send.addEventListener("click", () => { resp(index); });
+        let resp = function(index){
             event.preventDefault();
             let request = document.myForm.request.value;
             console.log(request);
             let action = document.myForm.command.value;
             console.log(action);
             let xhr = new XMLHttpRequest();
-            xhr.open('GET',`http://www.omdbapi.com/?apikey=1cb8834e&type=${action}&s=${request}&page=${1}`, true);
+            xhr.open('GET',`http://www.omdbapi.com/?apikey=1cb8834e&type=${action}&s=${request}&page=${index}`, true);
             xhr.send();
-
             xhr.onreadystatechange = ()=>{
                 if(xhr.readyState == 4) {
                     if (xhr.status != 200) {
@@ -60,9 +72,15 @@
                         let str = '';
                         let result = (JSON.parse(xhr.responseText))['Search'];
                         //console.log(xhr.responseText);
+                        if((JSON.parse(xhr.responseText))['totalResults']%10 === 0){
+                            pages = Math.trunc((+(JSON.parse(xhr.responseText))['totalResults']) / 10);
+                        }
+                        else {
+                            pages = Math.trunc((+(JSON.parse(xhr.responseText))['totalResults']) / 10 + 1);
+                        }
+                        //console.log('pages: ' + pages);
                         if(result.length > 0) {
                             let div = null;
-
                             let parent = document.querySelector("#container");
                             parent.innerHTML = '';
                             for(let i = 0; i < result.length; i++) {
@@ -82,15 +100,16 @@
                                 parent.appendChild(div);
                                 
                             };
-                            // let movies = (JSON.parse(responseText))['totalResults'];
-                            // if(+movies > 10) {
-
-                            // };
+                            if(pages > 1) {
+                                let pagin = document.createElement('div');
+                                pagin.className = 'pagination';
+                                Pagination();
+                            };  
                         };
                     };
                 };
             };
-        });
+        };
         let modal = null;
         let btn_click = function(){
             let id = event.target.dataset.movieId;
@@ -148,6 +167,73 @@
         };
         let closed = function() {
             document.body.removeChild(modal);
+        }
+        let Pagination = function() {
+            if( pages > 1) {
+                msg = '<button data-val = "<" onclick="moove()"><<</button>';
+                if(pages > 5) {
+                    for(let i = 1; i < 6; i++) {
+                        msg += `<button class="btn" data-val="${i + shift}" onclick="moove()">${i + shift}</button>`;
+                    }
+                }
+                else {
+                    for(let i = 1; i <= pages; i++) {
+                        msg += `<button class="btn" data-val="${i}" onclick="moove()">${i}</button>`;
+                    }
+                }
+                msg += '<button data-val=">" onclick="moove()">>></button>';
+                pagin.innerHTML = msg;
+                document.querySelector('.btn').style.color = 'red';
+            } 
+        }
+        let moove = function() {
+            let elem = event.target;
+            if(elem.dataset.val == '<') {
+                if(index == 1) {
+                    return;
+                }
+                index --;
+                resp(index);
+                if(index == shift) {
+                    shift  --;
+                    msg = `<button data-val = "<" onclick="moove()"><<</button>`;
+                    for(let i = index; i < 5 + index; i++) {
+                        msg += `<button class="btn" data-val="${i}" onclick="moove()">${i}</button>`;
+                    }
+                    msg += `<button data-val=">" onclick="moove()">>></button>`;
+                    pagin.innerHTML = '';
+                    pagin.innerHTML = str;
+                }
+                
+            }
+            else if(elem.dataset.val == '>') {
+                if(index == pages) {
+                    return;
+                }
+                index ++;
+                resp(index);
+                if(index > 5) {
+                    shift ++;
+                    msg = `<button data-val = "<" onclick="moove()"><<</button>`;
+                    for(let i = 1; i < 6; i++) {
+                        msg += `<button class="btn" data-val="${i + shift}" onclick="moove()">${i + shift}</button>`;
+                    }
+                    msg += `<button data-val=">" onclick="moove()">>></button>`;
+                    pagin.innerHTML = '';
+                    pagin.innerHTML = msg;
+                }
+            }
+            else {
+                index = +elem.dataset.val;   
+            }
+            console.log(index);
+            let list = document.querySelectorAll('.btn');
+            for(let i = 0; i < 5; i++) {
+                list[i].style.color = 'black';
+                if(+list[i].dataset.val == index) {
+                    list[i].style.color = 'red';
+                }
+            }
         }
     </script>
 </body>
